@@ -6,24 +6,26 @@
 #
 #    http://shiny.rstudio.com/
 #
+##install.packages("shinyDatetimePickers")
 
 library(shiny)
+library(shinyDatetimePickers)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("SBB Open Shops"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
+            selectInput(inputId="Haltestelle",
+                        label="Haltestelle",
+                        choices=sbbshops$Haltestellen.Name),
+            datetimePickerInput(inputId="Zeit wählen", value = NULL, style = NULL)
         ),
+        
 
         # Show a plot of the generated distribution
         mainPanel(

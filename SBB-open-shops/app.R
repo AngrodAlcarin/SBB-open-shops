@@ -52,17 +52,19 @@ server <- function(input, output) {
     station <- input$station_selector
     if (!is.null(station)) {
       filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station, ]
-      shops_list <- unique(filtered_data$Name)
-      logos_list<-unique(filtered_data$logourl2)
+      shops_list <- filtered_data$Name
+      logos_list<-filtered_data$logourl2
+      loc_list<-filtered_data$name_affix
       if (length(shops_list) > 0) {
         shops_df <- data.frame(Shop_Logos =logos_list,
-                               Shop_Names = shops_list)
+                               Shop_Names = shops_list,
+                               Shop_Names=loc_list)
         
         
         datatable(
           shops_df,
           escape=FALSE,
-          colnames = c("","Shops"),
+          colnames = c("","Shops","Location"),
           options = list(
             pageLength = 25,
             lengthChange = FALSE,
@@ -70,7 +72,7 @@ server <- function(input, output) {
             pagingType = "numbers",
             columnDefs = list(
               list(
-                targets = 0,  # Index of the column (0-based) you want to disable sorting for
+                targets = c(0,2),  # Index of the column (0-based) you want to disable sorting for
                 orderable = FALSE
               )
             ),

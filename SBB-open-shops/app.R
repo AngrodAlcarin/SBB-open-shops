@@ -52,19 +52,29 @@ server <- function(input, output) {
     station <- input$station_selector
     if (!is.null(station)) {
       filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station, ]
-      shops_list <- unique(filtered_data$Name)  
+      shops_list <- unique(filtered_data$Name)
+      logos_list<-unique(filtered_data$logourl2)
       if (length(shops_list) > 0) {
-        shops_df <- data.frame(Shop_Names = shops_list)
+        shops_df <- data.frame(Shop_Logos =logos_list,
+                               Shop_Names = shops_list)
         
         
         datatable(
           shops_df,
-          colnames = c("Shops"),
+          escape=FALSE,
+          colnames = c("","Shops"),
           options = list(
             pageLength = 25,
             lengthChange = FALSE,
             lengthMenu = list(c(-1), c("All")),
-            pagingType = "numbers" 
+            pagingType = "numbers",
+            columnDefs = list(
+              list(
+                targets = 0,  # Index of the column (0-based) you want to disable sorting for
+                orderable = FALSE
+              )
+            ),
+            order = list(list(1, 'asc')) 
           ),
           rownames = FALSE
         )

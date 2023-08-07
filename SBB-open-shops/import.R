@@ -6,7 +6,8 @@ sbbopenshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/dataset
 sbbshops<-sbbopenshops %>% 
   select(c(5,7:13,17,34:37)) %>% 
   filter(!category %in% c("Öffentlicher Verkehr","Piktogramm (Übrige)", "Piktogramm SBB Schalter")) %>% 
-  mutate(logourl=paste("https://stations.sbb.cartaro-enterprise.com", sbbshops$logo,sep = ""))
+  mutate(logourl=paste("https://stations.sbb.cartaro-enterprise.com", sbbshops$logo,sep = ""),
+         logourl2=paste("<img src=", "\"", sbbshops$logourl, "\""," width=\"80\"></img>",sep=""))
 
 nlevels(factor(sbbshops$Haltestellen.Name))
 unique(sbbshops$Haltestellen.Name)

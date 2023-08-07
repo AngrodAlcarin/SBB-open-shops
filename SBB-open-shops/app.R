@@ -8,10 +8,12 @@
 #
 ##install.packages("shinyDatetimePickers")
 ##install.packages("DT")
+##install.packages("leaflet")
 
 library(shiny)
 library(shinyDatetimePickers)
 library(DT)
+library(leaflet)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -33,6 +35,7 @@ ui <- fluidPage(
         # Show a plot of the generated distribution
         mainPanel(
           h3(textOutput("table_title")),
+          leafletOutput("map"),
           dataTableOutput("shops_output")
         )
     )
@@ -47,6 +50,28 @@ server <- function(input, output) {
       paste("Shops at", station, "station")
     }
   })
+  
+  output$map <- renderLeaflet({
+    station <- input$station_selector
+    
+    if (!is.null(station)) {
+      filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station, ]
+      
+      map <- leaflet() %>%
+        addTiles()  # Add default map tiles
+      
+      for (i in 1:nrow(filtered_data)) {
+        lat <- as.numeric(unlist(strsplit(filtered_data$Geoposition[i], ", "))[1])
+        lon <- as.numeric(unlist(strsplit(filtered_data$Geoposition[i], ", "))[2])
+        name <- filtered_data$Name[i]
+        
+        map <- addMarkers(map, lat = lat, lng = lon, popup = name)
+      }
+      
+      map
+    }
+  })
+  
   
   output$shops_output <- renderDataTable({
     station <- input$station_selector

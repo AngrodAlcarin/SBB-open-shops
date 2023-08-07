@@ -1,4 +1,4 @@
-#
+# 
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
 #
@@ -7,9 +7,11 @@
 #    http://shiny.rstudio.com/
 #
 ##install.packages("shinyDatetimePickers")
+##install.packages("DT")
 
 library(shiny)
 library(shinyDatetimePickers)
+library(DT)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -20,34 +22,57 @@ ui <- fluidPage(
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
-            selectInput(inputId="Haltestelle",
-                        label="Haltestelle",
-                        choices=sbbshops$Haltestellen.Name),
-            datetimePickerInput(inputId="Zeit wählen", value = NULL, style = NULL)
+            selectInput(inputId="station_selector",
+                        label="Train Station",
+                        choices=sort(unique(sbbshops$Haltestellen.Name))
+                        ),
+            datetimeMaterialPickerInput(inputId="Time",label="Choose time", value = NULL, style = NULL)
         ),
         
 
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("distPlot")
+          h3(textOutput("table_title")),
+          dataTableOutput("shops_output")
         )
     )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+  
+  output$table_title <- renderText({
+    station <- input$station_selector
+    if (!is.null(station)) {
+      paste("Shops at", station, "station")
+    }
+  })
+  
+  output$shops_output <- renderDataTable({
+    station <- input$station_selector
+    if (!is.null(station)) {
+      filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station, ]
+      shops_list <- unique(filtered_data$Name)  
+      if (length(shops_list) > 0) {
+        shops_df <- data.frame(Shop_Names = shops_list)
+        
+        
+        datatable(
+          shops_df,
+          colnames = c("Shops"),
+          options = list(
+            pageLength = 25,
+            lengthChange = FALSE,
+            lengthMenu = list(c(-1), c("All")),
+            pagingType = "numbers" 
+          ),
+          rownames = FALSE
+        )
+      }
+    }
+  })
 }
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)

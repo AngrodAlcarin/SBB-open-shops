@@ -1,5 +1,7 @@
 ##install.packages("dplyr")
+##install.packages("tidyverse")
 library(dplyr)
+library(tidyverse)
 
 sbbopenshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
 
@@ -9,10 +11,13 @@ sbbshops<-sbbopenshops %>%
   filter(!category %in% c("Öffentlicher Verkehr","Piktogramm (Übrige)")) %>% 
   mutate(logourl=paste("https://stations.sbb.cartaro-enterprise.com", logo,sep = ""),
          logourl2=paste("<img src=", "\"", logourl, "\""," width=\"80\"></img>",sep=""),
-         category=case_when(category == "Piktogramm SBB Schalter" ~ "SBB Schalter", TRUE~category),
-         category=case_when(category=="Services P"~"Services", 
+         category=case_when(category=="Piktogramm SBB Schalter" ~ "SBB Schalter",
+                            category=="Services P"~"Services", 
                             category=="Services IM"~"Services",
-                            category=="Services-Übrige"~"Services", TRUE~category))
+                            category=="Services-Übrige"~"Services",
+                            category=="Kombinierte Mobilität"~"Mobilität", TRUE~category),
+         subcategories = strsplit(subcategories, "[\n /]+"))
+
 
 nlevels(factor(sbbshops$Haltestellen.Name))
 unique(sbbshops$Haltestellen.Name)

@@ -10,13 +10,15 @@
 ##install.packages("DT")
 ##install.packages("leaflet")
 ##install.packages("shinydashboard")
+##install.packages("shinyWidgets")
 
 library(shiny)
 library(shinyDatetimePickers)
 library(shinydashboard)
 library(DT)
 library(leaflet)
-
+library(stringr)
+library(shinyWidgets)
 
 # Define UI for application that draws a histogram
 
@@ -29,19 +31,17 @@ ui <- fluidPage(
       selectInput(
         inputId = "station_selector",
         label = "Train Station",
-        choices = sort(unique(sbbshops$Haltestellen.Name))
+        choices = sort(unique(sbbshops$Haltestellen.Name)),
       ),
       selectInput(
-        inputId="cat_selector",
-        label="Category",
-        choices=sort(unique(sbbshops$category))
+        inputId = "cat_selector",
+        label = "Category",
+        choices = c("", sort(unique(sbbshops$category))),
+        selected = ""  # Set default selection to NULL
       ),
-      if (cat_selector=="Shopping") {
-      selectInput(
-        inputId="subcat_selector",
-        label="Subcategory",
-        choices=sort(unique(sbbshops$subcategories))
-      )},
+      uiOutput("subcat_selector"),
+      actionButton("clear_selection_button", "Clear Selection",class = "btn-clear"),
+      tags$style(".btn-clear { margin-bottom: 20px; }"),  # Add margin above the button
       datetimeMaterialPickerInput(
         inputId = "Time",
         label = "Choose time",
@@ -64,7 +64,7 @@ ui <- fluidPage(
 
 
 
-server <- function(input, output) {
+server <- function(input, output, session) {
   
   #the title above the map and table, reactive on which station is selected
   output$table_title <- renderText({
@@ -73,30 +73,31 @@ server <- function(input, output) {
       paste("Shops at", station, "station")
     }
   })
-
   
   #data table containing all shops at the selected train station
-  output$shops_output <- renderDataTable({
-    station <- input$station_selector
-    if (!is.null(station)) {
-      filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station, ]
-      shops_list <- filtered_data$Name
-      logos_list<-filtered_data$logourl2
-      loc_list<-filtered_data$name_affix
-      cat_list<-filtered_data$category
-      if (length(shops_list) > 0) {
-        shops_df <- data.frame(Shop_Logos =logos_list,
-                               Shop_Names = shops_list,
-                               Shop_Names=loc_list,
-                               Shop_Names=cat_list)
+
     
-    selected_cat<-reactiveVal(NULL)
-    cat<-input$cat_selector
-    
-    observeEvent(input$cat_selector,{
-      selected_cat<-input$cat_selector
-    })
+  output$subcat_selector <- renderUI({
+    if (!is.null(input$cat_selector)) {
+      if (input$cat_selector %in% c("Shopping", "Services")){
+        filtered_subcategories <- unique(sbbshops$subcategories[sbbshops$category == input$cat_selector])
+        if (length(filtered_subcategories) > 0) {
+          filtered_subcategories <- unlist(filtered_subcategories)
+          selectInput(
+            inputId = "subcat_selector",
+            label = "Subcategory",
+            choices = sort(filtered_subcategories),
+            selected=NULL
+          )
+      } else {
+        # Return NULL or an empty element if there are no subcategories
+        NULL
+      }
+     }
+    }
+  })
         
+           
     #reactive expression to highlight selected shop(s) on the map    
     selected_shop <- reactiveVal(NULL)
     
@@ -120,7 +121,11 @@ server <- function(input, output) {
           
           
         })
-    
+      
+      observeEvent(input$clear_selection_button, {
+        updateSelectInput(session, "cat_selector", selected = "")
+        updateSelectInput(session, "subcat_selector", selected = "")
+      })
     
       
       if (!is.null(station)) {
@@ -152,7 +157,27 @@ server <- function(input, output) {
         map
       }
     })
-    
+    output$shops_output <- renderDataTable({
+      station <- input$station_selector
+      category <- input$cat_selector
+      subcategory <- input$subcat_selector
+      if (!is.null(station)) {
+        filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station, ]
+        if (!is.null(category)&&category !=""){
+          filtered_data<-filtered_data[filtered_data$category==category,]
+          if (!is.null(subcategory)&&subcategory!=""){
+            filtered_data<-filtered_data[grep(subcategory, filtered_data$subcategories),]
+          }
+        }
+        shops_list <- filtered_data$Name
+        logos_list<-filtered_data$logourl2
+        loc_list<-filtered_data$name_affix
+        cat_list<-filtered_data$category
+        if (length(shops_list) > 0) {
+          shops_df <- data.frame(Shop_Logos =logos_list,
+                                 Shop_Names = shops_list,
+                                 Shop_Names=loc_list,
+                                 Shop_Names=cat_list)    
         #the table itself
         datatable(
           shops_df,
@@ -173,7 +198,18 @@ server <- function(input, output) {
           ),
           rownames = FALSE#remove the numbering of the shops
         )
-      }
+        }
+        else {
+          datatable(data.frame(x="No Shops matching the selection found.",y=""),
+                    rownames = FALSE,
+                    colnames="",
+                    options=list(
+                      paging=FALSE,
+                      searching=F,
+                      info=F,
+                      ordering=F
+                    ))
+        }
     }
   })
 }

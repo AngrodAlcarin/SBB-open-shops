@@ -31,6 +31,17 @@ ui <- fluidPage(
         label = "Train Station",
         choices = sort(unique(sbbshops$Haltestellen.Name))
       ),
+      selectInput(
+        inputId="cat_selector",
+        label="Category",
+        choices=sort(unique(sbbshops$category))
+      ),
+      if (cat_selector=="Shopping") {
+      selectInput(
+        inputId="subcat_selector",
+        label="Subcategory",
+        choices=sort(unique(sbbshops$subcategories))
+      )},
       datetimeMaterialPickerInput(
         inputId = "Time",
         label = "Choose time",
@@ -43,7 +54,7 @@ ui <- fluidPage(
       h3(textOutput("table_title")),
       leafletOutput("map", height = 350),
       div(
-        style = "height: 600px; width: 100%; overflow-y: auto;",
+        style = "height: 350px; width: 100%; overflow-y: auto;",
         dataTableOutput("shops_output")
       )
       
@@ -79,6 +90,13 @@ server <- function(input, output) {
                                Shop_Names=loc_list,
                                Shop_Names=cat_list)
     
+    selected_cat<-reactiveVal(NULL)
+    cat<-input$cat_selector
+    
+    observeEvent(input$cat_selector,{
+      selected_cat<-input$cat_selector
+    })
+        
     #reactive expression to highlight selected shop(s) on the map    
     selected_shop <- reactiveVal(NULL)
     

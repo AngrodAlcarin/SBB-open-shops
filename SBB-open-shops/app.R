@@ -158,6 +158,7 @@ server <- function(input, output, session) {
         }
     }
   })
+    ##the action button to clear selections in the category and subcategory selector
     observeEvent(input$clear_selection_button, {
       updateSelectInput(session, "cat_selector", selected = "")
       updateSelectInput(session, "subcat_selector", selected = "")
@@ -184,44 +185,55 @@ server <- function(input, output, session) {
         
       })
       
+      map <- leaflet() %>%
+        addTiles()  # Add default map tiles
       
       if (!is.null(station)) {
         filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station, ]
-        if (!is.null(category)&&category !=""){
-          filtered_data<-filtered_data[filtered_data$category==category,]
+        if (!is.null(category) && category != "") {
+          filtered_data <- filtered_data[filtered_data$category == category, ]
         }
-        if (!is.null(subcategory)&&subcategory!=""){
-          filtered_data<-filtered_data[grep(subcategory, filtered_data$subcategories),]
+        if (!is.null(subcategory) && subcategory != "") {
+          filtered_data <- filtered_data[grep(subcategory, filtered_data$subcategories), ]
         }
         
-        
-        map <- leaflet() %>%
-          addTiles()  # Add default map tiles
-        #make selected shops red and bigger highlighted
-        selected_rows <- input$shops_output_rows_selected
-        #unlist the latitude and longitude from the dataset, it was in a single column
-        for (i in 1:nrow(filtered_data)) {
-          lat <- as.numeric(unlist(strsplit(filtered_data$Geoposition[i], ", "))[1])
-          lon <- as.numeric(unlist(strsplit(filtered_data$Geoposition[i], ", "))[2])
-          name <- filtered_data$Name[i]
-          #if row is selected, show it as red and bigger
-          if (i %in% selected_rows) {
-            icon_url <- "pin-l-shop+f00.png"
-            icon <- makeIcon(iconUrl = icon_url, iconWidth = 45, iconHeight = 112.5)
-          } 
-          #if not, show it as a normal blue smaller pin
-          else {
-            icon_url <- "pin-l-shop+12a.png"
-            icon <- makeIcon(iconUrl = icon_url, iconWidth = 35, iconHeight = 87.5)
-          }
+        # Center the map on the selected station
+        if (nrow(filtered_data) > 0) {
+          lat <- as.numeric(unlist(strsplit(filtered_data$Geoposition[1], ", "))[1])
+          lon <- as.numeric(unlist(strsplit(filtered_data$Geoposition[1], ", "))[2])
           
-          map <- addMarkers(map, lat = lat, lng = lon, popup = name, icon = icon)
+          # Add markers to the map
+          selected_rows <- input$shops_output_rows_selected
+          for (i in 1:nrow(filtered_data)) {
+            lat <- as.numeric(unlist(strsplit(filtered_data$Geoposition[i], ", "))[1])
+            lon <- as.numeric(unlist(strsplit(filtered_data$Geoposition[i], ", "))[2])
+            name <- filtered_data$Name[i]
+            
+            #if row is selected, show it as red and bigger
+            if (i %in% selected_rows) {
+              icon_url <- "pin-l-shop+f00.png"
+              icon <- makeIcon(iconUrl = icon_url, iconWidth = 45, iconHeight = 112.5)
+            } 
+            #if not, show it as a normal blue smaller pin
+            else {
+              icon_url <- "pin-l-shop+12a.png"
+              icon <- makeIcon(iconUrl = icon_url, iconWidth = 35, iconHeight = 87.5)
+            }
+            
+            map <- addMarkers(map, lat = lat, lng = lon, popup = name, icon = icon)
+          }
+        } else {
+          # If no matching shops, center the map on the selected station
+          station_data <- sbbshops[sbbshops$Haltestellen.Name == station, ]
+          lat <- as.numeric(unlist(strsplit(station_data$Geoposition[1], ", "))[1])
+          lon <- as.numeric(unlist(strsplit(station_data$Geoposition[1], ", "))[2])
+          map <- setView(lng = lon, lat = lat, zoom = 17, map)
         }
-        
-        map
       }
       
-    })    
+      map
+    })
+    
 }
 
 

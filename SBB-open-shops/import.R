@@ -16,6 +16,9 @@ sbbshops<-sbbopenshops %>%
                             category=="Services IM"~"Services",
                             category=="Services-Übrige"~"Services",
                             category=="Kombinierte Mobilität"~"Mobilität", TRUE~category),
+         subcategories=case_when(subcategories=="Dienstleistungen SBB Services"~"SBB Services",
+                                 subcategories=="SBB Services"~"SBB Services",
+                                 subcategories=="SBB"~"SBB Services",TRUE~subcategories),
          subcategories = strsplit(subcategories, "[\n /]+"))
 
 

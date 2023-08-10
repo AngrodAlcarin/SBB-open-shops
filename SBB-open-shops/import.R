@@ -23,8 +23,9 @@ sbbshops<-sbbopenshops %>%
          subcategories=case_when(subcategories=="Dienstleistungen SBB Services"~"SBB Services",
                                  subcategories=="SBB Services"~"SBB Services",
                                  subcategories=="SBB"~"SBB Services",TRUE~subcategories),
-         subcategories = strsplit(subcategories, "[\n /]+"))
-
-
-nlevels(factor(sbbshops$Haltestellen.Name))
-unique(sbbshops$Haltestellen.Name)
+         subcategories = strsplit(subcategories, "[\n /]+"))%>%
+  mutate(openhours_list = strsplit(as.character(openhours), "\\]\\s*\\[", perl = TRUE)) %>%
+  unnest(openhours_list) %>%
+  mutate(openhours_list = paste0("[", openhours_list, "]")) %>%
+  mutate(openhours_list = map(openhours_list, ~ suppressWarnings(fromJSON(.x))))%>%
+  unnest_wider(openhours_list, names_sep = "_")

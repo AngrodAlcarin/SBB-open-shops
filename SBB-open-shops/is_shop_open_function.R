@@ -6,49 +6,49 @@ library(dplyr)
 library(tidyverse)
 library(jsonlite)
 library(lubridate)
+library(purrr)
 
-is_open_at_specific_hours <- function(oh_json, selected_day, selected_time) {
-  if (length(oh_json) == 0) {
+
+shop_has_hours <- function(openhours_data) {
+  if (is.null(openhours_data) || all(sapply(openhours_data, is.null))) {
     return(FALSE)
+  } else {
+    return(TRUE)
+  }
+}
+
+
+is_shop_open <- function(openhours_data, current_day, current_time) {
+  if (!shop_has_hours(openhours_data)) {
+    return("No opening hours published")
   }
   
-  selected_time <- as.POSIXlt(selected_time, format = "%T")
-  selected_day <- as.integer(selected_day) %% 7 + 1
-  
-  for (oh in oh_json) {
-    day_from <- oh$day_from
-    day_to <- oh$day_to
-    time_from <- as.POSIXlt(oh$time_from, format = "%T")
-    time_to <- as.POSIXlt(oh$time_to, format = "%T")
+  for (i in 1:length(openhours_data)) {
+    day_from <- openhours_data[[i]]$day_from
+    day_to <- openhours_data[[i]]$day_to
+    time_from <- openhours_data[[i]]$time_from
+    time_to <- openhours_data[[i]]$time_to
     
-    if ((is.na(day_to) || day_to == "null" || selected_day >= day_from) && 
-        (is.na(day_to) || is.null(day_to) || (selected_day <= day_to))) {
+    if ((is.na(day_to) || current_day >= day_from) && 
+        (is.na(day_to) || current_day <= day_to)) {
       
-      if (selected_time >= time_from && selected_time <= time_to) {
-        return(TRUE)
+      if (current_time >= time_from && current_time <= time_to) {
+        return("The shop is currently open")
       }
     }
   }
   
-  return(FALSE)
+  return("The shop is currently closed")
 }
 
-test_case_1 <- list(
-  list(day_from = 1, day_to = 7, time_from = "08:00:00", time_to = "18:00:00")
-)
-selected_day <- 3
-selected_time <- "19:00:00"
 
-result <- is_open_at_specific_hours(test_case_1, selected_day, selected_time)
-print(result)
 
-test_case_2 <- list(
-  list(day_from = 1, day_to = 5, time_from = "08:00:00", time_to = "18:00:00"),
-  list(day_from = 6, day_to = 7, time_from = "10:00:00", time_to = "16:00:00")
-)
+# Example usage
+# Example usage
+selected_shop <- sbbshops[41, ]  # Replace with the shop you're interested in
+current_day <- as.integer(format(Sys.time(), "%w")) + 1  # 1: Sunday, 7: Saturday
+current_time <- format(Sys.time(), "%H:%M:%S")
 
-selected_day <- 7
-selected_time <- "09:00:00"
+shop_status <- is_shop_open(selected_shop$openhours_list_1, current_day, current_time)
+cat(shop_status, "\n")
 
-result <- is_open_at_specific_hours(test_case_2, selected_day, selected_time)
-print(result)

@@ -57,6 +57,11 @@ server <- function(input, output, session) {
     }
   })
   
+  observeEvent(input$Time, {
+    datetime_value<-input$Time
+    print(datetime_value)
+  })
+  
   ##reactive subcategory selector to only show subcategory selector when categories shopping/services are selected.
   output$subcat_selector <- renderUI({
     if (!is.null(input$cat_selector)) {

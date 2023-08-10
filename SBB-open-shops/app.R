@@ -68,8 +68,8 @@ server <- function(input, output, session) {
           selectInput(
             inputId = "subcat_selector",
             label = "Subcategory",
-            choices = sort(filtered_subcategories),
-            selected = NULL
+            choices = c("",sort(filtered_subcategories)),
+            selected = ""
           )
         } else {
           # Return NULL or an empty element if there are no subcategories
@@ -79,73 +79,11 @@ server <- function(input, output, session) {
     }
   })
   
-  #data table containing all shops at the selected train station
-  output$shops_output <- renderDataTable({
-    station <- input$station_selector
-    category <- input$cat_selector
-    subcategory <- input$subcat_selector
-    if (!is.null(station)) {
-      filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station,]
-      if (!is.null(category) && category != "") {
-        filtered_data <- filtered_data[filtered_data$category == category, ]
-        if (!is.null(subcategory) && subcategory != "") {
-          filtered_data <-
-            filtered_data[grep(subcategory, filtered_data$subcategories), ]
-        }
-      }
-      shops_list <- filtered_data$Name
-      logos_list <- filtered_data$logourl2
-      loc_list <- filtered_data$name_affix
-      cat_list <- filtered_data$category
-      #do the table if the list  is bigger than 1
-      if (length(shops_list) > 0) {
-        shops_df <- data.frame(
-          Shop_Logos = logos_list,
-          Shop_Names = shops_list,
-          Shop_Names = loc_list,
-          Shop_Names = cat_list
-        )
-        #the table itself
-        datatable(
-          shops_df,
-          escape = FALSE,
-          #allowing html for the images
-          colnames = c("", "Shop", "Location", "Category"),
-          options = list(
-            pageLength = 10,
-            lengthChange = FALSE,
-            lengthMenu = list(c(-1), c("All")),
-            pagingType = "numbers",
-            columnDefs = list(list(
-              targets = c(0, 2),  # disable sorting for location and logo
-              orderable = FALSE
-            )),
-            order = list(list(1, 'asc')) #list alphabetically by the shop name
-          ),
-          rownames = FALSE#remove the numbering of the shops
-        )
-      }
-      else {
-        datatable(
-          data.frame(x = "No Shops matching the selection found.", y = ""),
-          rownames = FALSE,
-          colnames = "",
-          options = list(
-            paging = FALSE,
-            searching = F,
-            info = F,
-            ordering = F
-          )
-        )##shows an empty navigationless table saying"No Shops matching the selection found." if there
-        ##are no shops matching the selection.
-      }
-    }
-  })
-  
   ##the action button to clear selections in the category and subcategory selector
   observeEvent(input$clear_selection_button, {
     updateSelectInput(session, "cat_selector", selected = "")
     updateSelectInput(session, "subcat_selector", selected = "")
+    selected_shop(NULL)
   })
   
   #reactive expression to highlight selected shop(s) on the map
@@ -175,10 +113,11 @@ server <- function(input, output, session) {
       filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station,]
       if (!is.null(category) && category != "") {
         filtered_data <- filtered_data[filtered_data$category == category,]
-      }
-      if (!is.null(subcategory) && subcategory != "") {
-        filtered_data <-
-          filtered_data[grep(subcategory, filtered_data$subcategories),]
+        
+        if (!is.null(subcategory) && subcategory != "") {
+          filtered_data <-
+            filtered_data[grep(subcategory, filtered_data$subcategories),]
+        }
       }
       
       # Center the map on the selected station
@@ -246,6 +185,70 @@ server <- function(input, output, session) {
     }
     map
   })
+  
+  #data table containing all shops at the selected train station
+  output$shops_output <- renderDataTable({
+    station <- input$station_selector
+    category <- input$cat_selector
+    subcategory <- input$subcat_selector
+    if (!is.null(station)) {
+      filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station,]
+      if (!is.null(category) && category != "") {
+        filtered_data <- filtered_data[filtered_data$category == category, ]
+        if (!is.null(subcategory) && subcategory != "") {
+          filtered_data <-
+            filtered_data[grep(subcategory, filtered_data$subcategories), ]
+        }
+      }
+      shops_list <- filtered_data$Name
+      logos_list <- filtered_data$logourl2
+      loc_list <- filtered_data$name_affix
+      cat_list <- filtered_data$category
+      #do the table if the list  is bigger than 1
+      if (length(shops_list) > 0) {
+        shops_df <- data.frame(
+          Shop_Logos = logos_list,
+          Shop_Names = shops_list,
+          Shop_Names = loc_list,
+          Shop_Names = cat_list
+        )
+        #the table itself
+        datatable(
+          shops_df,
+          escape = FALSE,
+          #allowing html for the images
+          colnames = c("", "Shop", "Location", "Category"),
+          options = list(
+            pageLength = 10,
+            lengthChange = FALSE,
+            lengthMenu = list(c(-1), c("All")),
+            pagingType = "numbers",
+            columnDefs = list(list(
+              targets = c(0, 2),  # disable sorting for location and logo
+              orderable = FALSE
+            )),
+            order = list(list(1, 'asc')) #list alphabetically by the shop name
+          ),
+          rownames = FALSE#remove the numbering of the shops
+        )
+      }
+      else {
+        datatable(
+          data.frame(x = "No Shops matching the selection found.", y = ""),
+          rownames = FALSE,
+          colnames = "",
+          options = list(
+            paging = FALSE,
+            searching = F,
+            info = F,
+            ordering = F
+          )
+        )##shows an empty navigationless table saying"No Shops matching the selection found." if there
+        ##are no shops matching the selection.
+      }
+    }
+  })
+  
 }
 
 # Run the application

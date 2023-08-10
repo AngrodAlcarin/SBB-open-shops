@@ -1,7 +1,11 @@
 ##install.packages("dplyr")
 ##install.packages("tidyverse")
+##install.packages("jsonlite")
+##install.packages("lubridate")
 library(dplyr)
 library(tidyverse)
+library(jsonlite)
+library(lubridate)
 
 sbbopenshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
 
@@ -24,3 +28,5 @@ sbbshops<-sbbopenshops %>%
 
 nlevels(factor(sbbshops$Haltestellen.Name))
 unique(sbbshops$Haltestellen.Name)
+
+

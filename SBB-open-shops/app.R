@@ -3,6 +3,8 @@
 ##install.packages("leaflet")
 ##install.packages("shinydashboard")
 ##install.packages("shinyWidgets")
+##install.packages("jsonlite")
+##install.packages("lubridate")
 
 library(shiny)
 library(shinyDatetimePickers)
@@ -11,6 +13,8 @@ library(DT)
 library(leaflet)
 library(stringr)
 library(shinyWidgets)
+library(jsonlite)
+library(lubridate)
 
 # Define UI
 ui <- fluidPage(titlePanel("SBB Open Shops"),

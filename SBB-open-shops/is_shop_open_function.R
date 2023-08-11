@@ -8,7 +8,6 @@ library(jsonlite)
 library(lubridate)
 library(purrr)
 
-
 shop_has_hours <- function(openhours_data) {
   if (is.null(openhours_data) || all(sapply(openhours_data, is.null))) {
     return(FALSE)
@@ -16,7 +15,6 @@ shop_has_hours <- function(openhours_data) {
     return(TRUE)
   }
 }
-
 
 is_shop_open <- function(openhours_data, current_day, current_time) {
   if (!shop_has_hours(openhours_data)) {
@@ -41,11 +39,8 @@ is_shop_open <- function(openhours_data, current_day, current_time) {
   return("The shop is currently closed")
 }
 
-
-
 # Example usage
-# Example usage
-selected_shop <- sbbshops[41, ]  # Replace with the shop you're interested in
+selected_shop <- sbbshops[41, ]  
 current_day <- as.integer(format(Sys.time(), "%w")) + 1  # 1: Sunday, 7: Saturday
 current_time <- format(Sys.time(), "%H:%M:%S")
 

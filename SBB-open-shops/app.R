@@ -3,6 +3,7 @@
 ##install.packages("leaflet")
 ##install.packages("shinydashboard")
 ##install.packages("shinyWidgets")
+##install.packages("bs4Dash")
 
 library(shiny)
 library(shinyDatetimePickers)
@@ -11,6 +12,7 @@ library(DT)
 library(leaflet)
 library(stringr)
 library(shinyWidgets)
+library(bs4Dash)
 
 # Define UI
 ui <- fluidPage(titlePanel("SBB Open Shops"),
@@ -32,12 +34,14 @@ ui <- fluidPage(titlePanel("SBB Open Shops"),
                     actionButton("clear_selection_button", "Clear Selection", class = "btn-clear"),
                     tags$style(".btn-clear { margin-bottom: 20px; }"),
                     # Add margin above the button
-                    datetimeMaterialPickerInput(
+                    airDatepickerInput(
                       inputId = "Time",
-                      label = "Choose time",
+                      label="Date&Time",
                       value = NULL,
-                      style = NULL
-                    )
+                      timepicker=TRUE
+                    ),
+                    actionButton("set_time_now", "Set to now"),
+                    actionButton("reset_time", "Reset")
                   ),
                   mainPanel(
                     h3(textOutput("table_title")),
@@ -57,6 +61,7 @@ server <- function(input, output, session) {
     }
   })
   
+  #observer for datetimevalue
   observeEvent(input$Time, {
     datetime_value<-input$Time
     print(datetime_value)
@@ -89,6 +94,16 @@ server <- function(input, output, session) {
     updateSelectInput(session, "cat_selector", selected = "")
     updateSelectInput(session, "subcat_selector", selected = "")
     selected_shop(NULL)
+  })
+  
+  ##action button to set time to now
+  observeEvent(input$set_time_now, {
+    updateAirDateInput(session, "Time",value=Sys.time())
+  })
+  
+  ##action button to reset time
+  observeEvent(input$reset_time, {
+    updateAirDateInput(session, "Time",clear=TRUE)
   })
   
   #reactive expression to highlight selected shop(s) on the map

@@ -40,14 +40,16 @@ ui <- fluidPage(titlePanel("SBB Open Shops"),
                       value = NULL,
                       timepicker=TRUE
                     ),
-                    actionButton("set_time_now", "Set to now"),
-                    actionButton("reset_time", "Reset")
+                    actionButton("set_time_now", "Set to now", width = 89.64),
+                    actionButton("reset_time", "Reset",width = 60),
+                    width = 3
                   ),
                   mainPanel(
                     h3(textOutput("table_title")),
                     leafletOutput("map", height = 350),
-                    div(style = "height: 350px; width: 100%; overflow-y: auto;",
-                        dataTableOutput("shops_output"))
+                    div(style = "height: 350px; width:100%; overflow-y: auto;",
+                        dataTableOutput("shops_output")),
+                    width = 9
                   )
                 ))
 
@@ -250,11 +252,11 @@ server <- function(input, output, session) {
               orderable = FALSE
             ),
             list(
-              targets = 4,  # Index of the "Opening Hours" column
-              className = "dt-center",  # Center-align content
+              targets = c(1,2,3,4),  # Index of the "Opening Hours" column
+              className = "dt-right",  # Center-align content
               render = JS(
                 "function(data, type, row) {",
-                "  return '<div style=\"font-size: 12px;\">' + data + '</div>';",
+                "  return '<div style=\"font-size: 12.679999828338622158696580299874767px;\">' + data + '</div>';",
                 "}"
               )
             )

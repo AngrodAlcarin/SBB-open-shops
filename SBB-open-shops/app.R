@@ -14,11 +14,22 @@ library(stringr)
 library(shinyWidgets)
 library(bs4Dash)
 
+
 # Define UI
-ui <- fluidPage(titlePanel("SBB Open Shops"),
-                
+ui <- fluidPage(tags$head(
+  tags$style(HTML("
+      body {
+        background-color:  #2d327d; 
+      }
+    "))
+),
+  titlePanel( div(style = "text-align: left;",
+                  img(src = 'SBB_NEG_2F_SCOTCH_100.png', height=55),
+                  img(src = '3044_Shopping.svg',width=95)
+  )),
                 sidebarLayout(
                   sidebarPanel(
+                    style = "background-color: #C60018;color:#F6F6F6",
                     selectInput(
                       inputId = "station_selector",
                       label = "Train Station",
@@ -45,6 +56,7 @@ ui <- fluidPage(titlePanel("SBB Open Shops"),
                     width = 3
                   ),
                   mainPanel(
+                    style = "background-color: #E5E5E5;",
                     h3(textOutput("table_title")),
                     leafletOutput("map", height = 350),
                     div(style = "height: 350px; width:100%; overflow-y: auto;",
@@ -55,18 +67,13 @@ ui <- fluidPage(titlePanel("SBB Open Shops"),
 
 #server function
 server <- function(input, output, session) {
+ 
   #the title above the map and table, reactive on which station is selected
   output$table_title <- renderText({
     station <- input$station_selector
     if (!is.null(station)) {
       paste("Shops at", station, "station")
     }
-  })
-  
-  #observer for datetimevalue
-  observeEvent(input$Time, {
-    datetime_value<-input$Time
-    print(datetime_value)
   })
   
   ##reactive subcategory selector to only show subcategory selector when categories shopping/services are selected.

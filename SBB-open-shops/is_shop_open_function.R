@@ -79,13 +79,13 @@ expand_openhours <- function(openhours_list) {
         # Check if there are already rows for this day
         existing_rows <- which(openhours_table$day_from == day_num)
         if (length(existing_rows) > 0) {
-          # If there are existing rows, add "Morning" or "Afternoon" to the day name
+          # If there are existing rows, remove the second time it's called
           if (openhours_table[existing_rows[1], "time_to"] < time_from) {
-            openhours_table[existing_rows, "day"] <- paste(openhours_table[existing_rows, "day"], "Morning")
-            day_name <- paste(day_num_to_name(day_num), "Afternoon")
+            openhours_table[existing_rows, "day"] <- paste("")
+            day_name <- paste("")
           } else {
-            openhours_table[existing_rows, "day"] <- paste(openhours_table[existing_rows, "day"], "Afternoon")
-            day_name <- paste(day_num_to_name(day_num), "Morning")
+            openhours_table[existing_rows, "day"] <- paste("")
+            day_name <- paste("")
           }
         } else {
           # If there are no existing rows, use the regular day name

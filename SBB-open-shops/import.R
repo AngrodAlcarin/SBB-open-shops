@@ -6,6 +6,7 @@ library(dplyr)
 library(tidyverse)
 library(jsonlite)
 library(lubridate)
+library(purrr)
 
 sbbopenshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
 
@@ -28,4 +29,8 @@ sbbshops<-sbbopenshops %>%
   unnest(openhours_list) %>%
   mutate(openhours_list = paste0("[", openhours_list, "]")) %>%
   mutate(openhours_list = map(openhours_list, ~ suppressWarnings(fromJSON(.x))))%>%
-  unnest_wider(openhours_list, names_sep = "_")
+  unnest_wider(openhours_list, names_sep = "_") %>% 
+  mutate(openhours_table = map(openhours_list_1, ~ format_opening_hours(.x)))%>%
+  unnest_wider(openhours_table, names_sep = "_")
+
+

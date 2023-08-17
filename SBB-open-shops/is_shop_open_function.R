@@ -17,10 +17,7 @@ shop_has_hours <- function(openhours_data) {
 }
 
 is_shop_open <- function(openhours_data, current_day, current_time) {
-  if (!shop_has_hours(openhours_data)) {
-    return("No opening hours published")
-  }
-  
+
   for (i in 1:length(openhours_data)) {
     day_from <- openhours_data[[i]]$day_from
     day_to <- openhours_data[[i]]$day_to
@@ -31,13 +28,53 @@ is_shop_open <- function(openhours_data, current_day, current_time) {
         (is.na(day_to) || current_day <= day_to)) {
       
       if (current_time >= time_from && current_time <= time_to) {
-        return("The shop is currently open")
+        return(TRUE)
       }
     }
   }
   
-  return("The shop is currently closed")
+  return(FALSE)
 }
+
+format_opening_hours <- function(hours_list) {
+  if (is.null(hours_list)) {
+    return("No opening hours published")
+  } else {
+    days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+    openhours_table <- rep("Closed", 7)  # Initialize with Closed for all days
+    
+    for (entry in hours_list) {
+      print(entry)  # Print the entry to debug
+      if (is.list(entry) && !is.null(entry$day_from) && !is.na(entry$day_from) &&
+          !is.null(entry$time_from) && !is.null(entry$time_to)) {
+        
+        if (is.na(entry$day_to)) {
+          entry$day_to <- entry$day_from
+        }
+        
+        day_from_index <- as.integer(entry$day_from) + 1
+        day_to_index <- as.integer(entry$day_to) + 1
+        
+        print(day_from_index)  # Print the day_from_index to debug
+        print(day_to_index)    # Print the day_to_index to debug
+        
+        for (day in day_from_index:day_to_index) {
+          openhours_table[day] <- paste0(days[day], ": ", entry$time_from, " - ", entry$time_to)
+        }
+      }
+    }
+    
+    return(openhours_table)
+  }
+}
+
+
+
+
+
+
+
+
 
 # Example usage
 selected_shop <- sbbshops[41, ]  

@@ -13,6 +13,7 @@ library(leaflet)
 library(stringr)
 library(shinyWidgets)
 library(bs4Dash)
+library(purrr)
 
 # Define UI
 ui <- fluidPage(titlePanel("SBB Open Shops"),
@@ -53,6 +54,61 @@ ui <- fluidPage(titlePanel("SBB Open Shops"),
 
 #server function
 server <- function(input, output, session) {
+  
+  #the functions needed for datetime
+  shop_has_hours <- function(openhours_data) {
+    if (is.null(openhours_data) || all(sapply(openhours_data, is.null))) {
+      return(FALSE)
+    } else {
+      return(TRUE)
+    }
+  }
+  
+  is_shop_open <- function(openhours_data, current_day, current_time) {
+    
+    for (i in 1:length(openhours_data)) {
+      day_from <- openhours_data[[i]]$day_from
+      day_to <- openhours_data[[i]]$day_to
+      time_from <- openhours_data[[i]]$time_from
+      time_to <- openhours_data[[i]]$time_to
+      
+      if ((is.na(day_to) || current_day >= day_from) && 
+          (is.na(day_to) || current_day <= day_to)) {
+        
+        if (current_time >= time_from && current_time <= time_to) {
+          return(TRUE)
+        }
+      }
+    }
+    
+    return(FALSE)
+  }
+  
+  format_opening_hours <- function(openhours) {
+    if (is.null(openhours)) {
+      return("No opening hours published")
+    } else {
+      opening_hours_per_day <- lapply(openhours, function(hours) {
+        if (!is.null(hours) && !is.null(hours$day_from) && !is.null(hours$time_from) && !is.null(hours$time_to)) {
+          if (!is.null(hours$day_to)) {
+            paste0("Day ", hours$day_from, " to ", hours$day_to, ": ",
+                   hours$time_from, " - ", hours$time_to)
+          } else {
+            paste0("Day ", hours$day_from, ": ",
+                   hours$time_from, " - ", hours$time_to)
+          }
+        } else {
+          "No opening hours available for this day"
+        }
+      })
+      return(paste(unlist(opening_hours_per_day), collapse = "<br>"))
+    }
+  }
+  
+  
+  
+  
+  
   #the title above the map and table, reactive on which station is selected
   output$table_title <- renderText({
     station <- input$station_selector
@@ -206,38 +262,53 @@ server <- function(input, output, session) {
     map
   })
   
+  
   #data table containing all shops at the selected train station
   output$shops_output <- renderDataTable({
     station <- input$station_selector
     category <- input$cat_selector
     subcategory <- input$subcat_selector
+    time <- input$Time
+    filtered_data <- sbbshops
+    
     if (!is.null(station)) {
-      filtered_data <- sbbshops[sbbshops$Haltestellen.Name == station,]
+      filtered_data <- filtered_data[filtered_data$Haltestellen.Name == station,]
+      
       if (!is.null(category) && category != "") {
         filtered_data <- filtered_data[filtered_data$category == category, ]
+        
         if (!is.null(subcategory) && subcategory != "") {
-          filtered_data <-
-            filtered_data[grep(subcategory, filtered_data$subcategories), ]
+          filtered_data <- filtered_data[grep(subcategory, filtered_data$subcategories), ]
         }
       }
+      
       shops_list <- filtered_data$Name
       logos_list <- filtered_data$logourl2
       loc_list <- filtered_data$name_affix
       cat_list <- filtered_data$category
+      
+      # Filter shops based on whether they have opening hours
+      has_hours <- sapply(filtered_data$openhours_list_1, shop_has_hours)
+      filtered_data <- filtered_data[has_hours, ]
+      
       #do the table if the list  is bigger than 1
-      if (length(shops_list) > 0) {
+      if (nrow(filtered_data) > 0) {  # Check if there are any rows
+        opening_hours_list <- purrr::map(filtered_data$openhours_list_1, format_opening_hours)
+        
         shops_df <- data.frame(
           Shop_Logos = logos_list,
           Shop_Names = shops_list,
-          Shop_Names = loc_list,
-          Shop_Names = cat_list
+          Location = loc_list,
+          Category = cat_list,
+          Opening_Hours = opening_hours_list
         )
+        
         #the table itself
         datatable(
           shops_df,
           escape = FALSE,
           #allowing html for the images
-          colnames = c("", "Shop", "Location", "Category"),
+          colnames = c("", "Shop", "Location", "Category", "Opening Hours"),
           options = list(
             pageLength = 10,
             lengthChange = FALSE,
@@ -249,25 +320,24 @@ server <- function(input, output, session) {
             )),
             order = list(list(1, 'asc')) #list alphabetically by the shop name
           ),
-          rownames = FALSE#remove the numbering of the shops
+          rownames = FALSE #remove the numbering of the shops
         )
-      }
-      else {
+      } else {
         datatable(
           data.frame(x = "No Shops matching the selection found.", y = ""),
           rownames = FALSE,
           colnames = "",
           options = list(
             paging = FALSE,
-            searching = F,
-            info = F,
-            ordering = F
+            searching = FALSE,
+            info = FALSE,
+            ordering = FALSE
           )
-        )##shows an empty navigationless table saying"No Shops matching the selection found." if there
-        ##are no shops matching the selection.
+        )  # shows an empty navigationless table saying "No Shops matching the selection found."
       }
     }
   })
+  
   
 }
 

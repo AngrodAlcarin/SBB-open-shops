@@ -28,4 +28,15 @@ sbbshops<-sbbopenshops %>%
   unnest(openhours_list) %>%
   mutate(openhours_list = paste0("[", openhours_list, "]")) %>%
   mutate(openhours_list = map(openhours_list, ~ suppressWarnings(fromJSON(.x))))%>%
-  unnest_wider(openhours_list, names_sep = "_")
+  unnest_wider(openhours_list, names_sep = "_") %>% 
+  mutate(openhours_table = lapply(sbbshops$openhours_list_1, expand_openhours),
+         openhours_char= lapply(sbbshops$openhours_table, function(openhours) {
+           if (!is.null(openhours) && is.data.frame(openhours)) {
+             # Extract and format the open hours data
+             openhours_text <- paste(openhours$day, openhours$time_from, openhours$time_to, sep = " - ")
+             paste(openhours_text, collapse = "<br>")
+           } else {
+             ""
+           }
+         }),
+         openhours_char=as.character(openhours_char))

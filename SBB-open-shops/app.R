@@ -224,20 +224,22 @@ server <- function(input, output, session) {
       logos_list <- filtered_data$logourl2
       loc_list <- filtered_data$name_affix
       cat_list <- filtered_data$category
+      hours_list <- filtered_data$openhours_char
       #do the table if the list  is bigger than 1
       if (length(shops_list) > 0) {
         shops_df <- data.frame(
           Shop_Logos = logos_list,
           Shop_Names = shops_list,
-          Shop_Names = loc_list,
-          Shop_Names = cat_list
+          Shop_Locs = loc_list,
+          Shop_Cats = cat_list,
+          Shop_Hours = hours_list
         )
         #the table itself
         datatable(
           shops_df,
           escape = FALSE,
           #allowing html for the images
-          colnames = c("", "Shop", "Location", "Category"),
+          colnames = c("", "Shop", "Location", "Category", "Opening Hours"),
           options = list(
             pageLength = 10,
             lengthChange = FALSE,
@@ -246,11 +248,23 @@ server <- function(input, output, session) {
             columnDefs = list(list(
               targets = c(0, 2),  # disable sorting for location and logo
               orderable = FALSE
-            )),
-            order = list(list(1, 'asc')) #list alphabetically by the shop name
+            ),
+            list(
+              targets = 4,  # Index of the "Opening Hours" column
+              className = "dt-center",  # Center-align content
+              render = JS(
+                "function(data, type, row) {",
+                "  return '<div style=\"font-size: 12px;\">' + data + '</div>';",
+                "}"
+              )
+            )
+            ),
+            order = list(list(1, 'asc'))  # list alphabetically by the shop name
           ),
-          rownames = FALSE#remove the numbering of the shops
-        )
+          rownames = FALSE
+        ) %>% 
+          formatStyle(5, width = '200px')#format opening hours row to be big enough to display one days opening hours
+                                         #in one line
       }
       else {
         datatable(

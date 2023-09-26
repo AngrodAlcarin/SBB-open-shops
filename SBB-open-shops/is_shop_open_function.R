@@ -1,8 +1,7 @@
-##install.packages("dplyr")
 ##install.packages("tidyverse")
 ##install.packages("jsonlite")
 ##install.packages("lubridate")
-library(dplyr)
+##install.packages("purrr")
 library(tidyverse)
 library(jsonlite)
 library(lubridate)
@@ -38,17 +37,6 @@ is_shop_open <- function(openhours_data, current_day, current_time) {
   
   return("The shop is currently closed")
 }
-
-# Example usage
-selected_shop <- sbbshops[8, ]  
-current_day <- as.integer(format(Sys.time(), "%w")) + 1  # 1: Sunday, 7: Saturday
-current_time <- format(Sys.time(), "%H:%M:%S")
-
-shop_status <- is_shop_open(selected_shop$openhours_list_1, current_day, current_time)
-cat(shop_status, "\n")
-
-
-#new approach
 
 # Define a function to convert day numbers to day names
 day_num_to_name <- function(day_num) {

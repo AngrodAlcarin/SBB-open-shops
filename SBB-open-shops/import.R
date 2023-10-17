@@ -4,6 +4,7 @@
 library(tidyverse)
 library(jsonlite)
 library(lubridate)
+library(RJSONIO)
 
 sbbopenshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
 write.csv2(sbbopenshops, "SBB-open-shops/sbbnewshops17oct23.csv") #archive current csv so it works even if it changes again
@@ -18,6 +19,11 @@ sbbshops<-sbbopenshops %>%
   mutate(openhours_list = map(openhours_list, ~ suppressWarnings(fromJSON(.x))))%>%
   unnest_wider(openhours_list, names_sep = "_")
 
+sbbshops<-sbbshops %>% 
+  rowwise() %>%
+  mutate(parsed_openinghours = list(fromJSON(openinghours))) %>%
+  ungroup() %>%
+  unnest(cols = parsed_openinghours)
 
 sbbshops<-sbbshops %>% 
   mutate(openhours_table = lapply(sbbshops$openhours_list_1, expand_openhours))

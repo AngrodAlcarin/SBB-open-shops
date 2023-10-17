@@ -56,48 +56,30 @@ expand_openhours <- function(openhours_list) {
       openhours_table <- rbind(openhours_table, data.frame(day_from = day_num, day = day_num_to_name(day_num), time_from = "00:00:00", time_to = "24:00:00"))
     }
   } else {
-    # If it is not NULL, expand the open hours according to the rules you provided
-    for (row in 1:nrow(openhours_list)) {
-      day_from <- openhours_list[row, "day_from"]
-      day_to <- ifelse(is.na(openhours_list[row, "day_to"]), day_from, openhours_list[row, "day_to"])
-      time_from <- openhours_list[row, "time_from"]
-      time_to <- openhours_list[row, "time_to"]
+    for (row in 1:length(openhours_list)) {
+      day_from <- openhours_list[[row]]$valid_from
+      day_to <- openhours_list[[row]]$valid_until
+      opening_hours <- openhours_list[[row]]$openinghours
       
-      for (day_num in day_from:day_to) {
-        # Check if there are already rows for this day
-        existing_rows <- which(openhours_table$day_from == day_num)
-        if (length(existing_rows) > 0) {
-          # If there are existing rows, remove the second time it's called
-          if (openhours_table[existing_rows[1], "time_to"] < time_from) {
-            openhours_table[existing_rows, "day"] <- paste("")
-            day_name <- paste("")
-          } else {
-            openhours_table[existing_rows, "day"] <- paste("")
-            day_name <- paste("")
-          }
-        } else {
-          # If there are no existing rows, use the regular day name
+      for (day_num in 1:7) {
+        if (is.null(day_from) || (day_num >= day_from && (is.null(day_to) || day_num <= day_to))) {
           day_name <- day_num_to_name(day_num)
+          for (oh in opening_hours) {
+            time_from <- oh$time_from
+            time_to <- oh$time_to
+            openhours_table <- rbind(openhours_table, data.frame(day_from = day_num, day = day_name, time_from = time_from, time_to = time_to))
+          }
         }
-        
-        # Add a new row to the openhours_table
-        openhours_table <- rbind(openhours_table, data.frame(day_from = day_num, day = day_name, time_from = time_from, time_to = time_to))
       }
     }
-    
-    # Add rows with NA for days that are not mentioned (i.e. the shop is closed)
-    for (day_num in 1:7) {
-      if (!day_num %in% openhours_table$day_from) {
-        openhours_table <- rbind(openhours_table, data.frame(day_from = day_num, day = day_num_to_name(day_num), time_from = NA, time_to = NA))
-      }
-    }
-    
-    # Order the resulting data frame by day_from
-    openhours_table <- openhours_table[order(openhours_table$day_from), ]
   }
+  
+  # Order the resulting data frame by day_from
+  openhours_table <- openhours_table[order(openhours_table$day_from), ]
   
   return(openhours_table)
 }
+
 
 # Define a function to format a data frame as a string
 format_df_as_string <- function(df) {

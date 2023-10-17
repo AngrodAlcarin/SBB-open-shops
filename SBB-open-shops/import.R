@@ -11,6 +11,7 @@ sbbopenshops<-read_delim("SBB-open-shops/offnungszeiten-shops.csv",delim = ";", 
                          trim_ws = TRUE,show_col_types=FALSE)
 
 sbbnewshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
+write_csv(sbbnewshops,"SBB-open-shops/sbbnewshops17oct23.csv") #archive current csv so it works even if it changes again
 sbbnewlogo<-sbbnewshops %>% 
   select(c(27,18)) %>% 
   rename(logourl=logo_svg)

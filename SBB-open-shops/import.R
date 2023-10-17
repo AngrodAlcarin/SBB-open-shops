@@ -6,28 +6,18 @@ library(jsonlite)
 library(lubridate)
 
 sbbopenshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
-  
-sbbshops<-sbbopenshops %>% 
-  select(c(2,3,13,18,19,25,26,29,36,46,47))
+write.csv2(sbbopenshops, "SBB-open-shops/sbbnewshops17oct23.csv") #archive current csv so it works even if it changes again
 
-sbbshops<-sbbshops %>% 
-  filter(!category %in% c("Öffentlicher Verkehr","Piktogramm (Übrige)")) %>% 
-  mutate(logourl=paste("https://stations.sbb.cartaro-enterprise.com", logo,sep = ""),
-         logourl2=paste("<img src=", "\"", logourl, "\""," width=\"80\"></img>",sep=""),
-         category=case_when(category=="Piktogramm SBB Schalter" ~ "SBB Schalter",
-                            category=="Services P"~"Services", 
-                            category=="Services IM"~"Services",
-                            category=="Services-Übrige"~"Services",
-                            category=="Kombinierte Mobilität"~"Mobilität", TRUE~category),
-         subcategories=case_when(subcategories=="Dienstleistungen SBB Services"~"SBB Services",
-                                 subcategories=="SBB Services"~"SBB Services",
-                                 subcategories=="SBB"~"SBB Services",TRUE~subcategories),
-         subcategories = strsplit(subcategories, "[\n /]+"))%>%
-  mutate(openhours_list = strsplit(as.character(openhours), "\\]\\s*\\[", perl = TRUE)) %>%
+sbbshops<-sbbopenshops %>% 
+  select(c(2,3,13,18,19,25,26,29,36,46,47)) %>% 
+  filter(!category =="__dummy__") %>% 
+  mutate(logourl2=paste("<img src=", "\"", logo_svg, "\""," width=\"80\"></img>",sep=""))%>%
+  mutate(openhours_list = strsplit(as.character(openinghours), "\\]\\s*\\[", perl = TRUE)) %>%
   unnest(openhours_list) %>%
   mutate(openhours_list = paste0("[", openhours_list, "]")) %>%
   mutate(openhours_list = map(openhours_list, ~ suppressWarnings(fromJSON(.x))))%>%
   unnest_wider(openhours_list, names_sep = "_")
+
 
 sbbshops<-sbbshops %>% 
   mutate(openhours_table = lapply(sbbshops$openhours_list_1, expand_openhours))

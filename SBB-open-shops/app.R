@@ -17,6 +17,7 @@ library(stringr)
 library(shinyWidgets)
 library(bs4Dash)
 library(purrr)
+library(readr)
 
 ##define functions
 shop_has_hours <- function(openhours_data) {
@@ -119,7 +120,8 @@ format_df_as_string <- function(df) {
 }
 
 ##data import
-sbbopenshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
+sbbopenshops<-read_delim("offnungszeiten-shops.csv",delim = ";", escape_double = TRUE,
+                         trim_ws = FALSE)
 
 sbbshops<-sbbopenshops %>% 
   select(c(1,5,7:13,17,34:37)) %>% 

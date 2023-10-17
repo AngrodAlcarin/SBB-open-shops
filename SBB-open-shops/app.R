@@ -121,16 +121,20 @@ format_df_as_string <- function(df) {
 
 ##data import
 sbbopenshops<-read_delim("offnungszeiten-shops.csv",delim = ";", escape_double = TRUE,
-                         trim_ws = FALSE,show_col_types=FALSE)
+                         trim_ws = FALSE,show_col_types=FALSE)%>% 
+  mutate(Namelow=tolower(Name))
 
 sbbnewshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
 sbbnewlogo<-sbbnewshops %>% 
-  select(c(27,18)) %>% 
-  rename(logourl=logo_svg)
-sbbmergedshops<-left_join(sbbopenshops,sbbnewlogo,by=join_by(url_identifier))
+  mutate(Namelow=tolower(Name)) %>% 
+  select(c(19,18,48)) %>% 
+  rename(logourl=logo_svg,
+         Namey=Name) %>% 
+  distinct()
+sbbmergedshops<-left_join(sbbopenshops,sbbnewlogo,by=join_by(Namelow),relationship="many-to-one",multiple="first")
 
 sbbshops<-sbbmergedshops %>% 
-  select(c(1,5,7:13,17,34:38)) %>% 
+  select(c(1,5,7:13,17,34:37,40)) %>% 
   filter(!category %in% c("Öffentlicher Verkehr","Piktogramm (Übrige)")) %>%
   mutate(logourl2=paste("<img src=", "\"", logourl, "\""," width=\"80\"></img>",sep=""),
          category=case_when(category=="Piktogramm SBB Schalter" ~ "SBB Schalter",

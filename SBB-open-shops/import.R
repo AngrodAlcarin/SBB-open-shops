@@ -6,7 +6,7 @@ library(jsonlite)
 library(lubridate)
 
 sbbopenshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
-
+  
 sbbshops<-sbbopenshops %>% 
   select(c(2,3,13,18,19,25,26,29,36,46,47))
 

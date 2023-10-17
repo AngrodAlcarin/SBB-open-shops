@@ -8,14 +8,18 @@ library(readr)
 
 
 sbbopenshops<-read_delim("SBB-open-shops/offnungszeiten-shops.csv",delim = ";", escape_double = TRUE,
-                         trim_ws = TRUE)
+                         trim_ws = TRUE,show_col_types=FALSE)
 
-sbbshops<-sbbopenshops %>% 
-  select(c(1,5,7:13,17,34:37)) %>% 
-  ##filter(!category %in% c("Öffentlicher Verkehr","Piktogramm (Übrige)", "Piktogramm SBB Schalter")) %>% 
+sbbnewshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
+sbbnewlogo<-sbbnewshops %>% 
+  select(c(27,18)) %>% 
+  rename(logourl=logo_svg)
+sbbmergedshops<-left_join(sbbopenshops,sbbnewlogo,by=join_by(url_identifier))
+
+sbbshops<-sbbmergedshops %>% 
+  select(c(1,5,7:13,17,34:38)) %>% 
   filter(!category %in% c("Öffentlicher Verkehr","Piktogramm (Übrige)")) %>%
-  mutate(logourl=paste("https://stations.sbb.cartaro-enterprise.com", logo,sep = ""),
-         logourl2=paste("<img src=", "\"", logourl, "\""," width=\"80\"></img>",sep=""),
+  mutate(logourl2=paste("<img src=", "\"", logourl, "\""," width=\"80\"></img>",sep=""),
          category=case_when(category=="Piktogramm SBB Schalter" ~ "SBB Schalter",
                             category=="Services P"~"Services", 
                             category=="Services IM"~"Services",

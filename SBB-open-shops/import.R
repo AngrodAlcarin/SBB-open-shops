@@ -12,7 +12,7 @@ sbbopenshops<-read_delim("SBB-open-shops/offnungszeiten-shops.csv",delim = ";", 
   mutate(Namelow=tolower(Name))
 
 sbbnewshops<-read.csv(url("https://data.sbb.ch/api/explore/v2.1/catalog/datasets/offnungszeiten-shops/exports/csv?limit=-1&lang=de&timezone=UTC&use_labels=true&epsg=4326"), sep = ';')
-write_csv(sbbnewshops,"SBB-open-shops/sbbnewshops17oct23.csv") #archive current csv so it works even if it changes again
+##write_csv(sbbnewshops,"SBB-open-shops/sbbnewshops17oct23.csv") #archive current csv so it works even if it changes again
 sbbnewlogo<-sbbnewshops %>% 
   mutate(Namelow=tolower(Name)) %>% 
   select(c(19,18,48)) %>% 

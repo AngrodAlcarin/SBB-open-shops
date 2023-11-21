@@ -50,3 +50,7 @@ rsconnect/
 
 #Rproj
 SBB-open-shops.Rproj
+
+#r-data from laptop
+sbbnewshops17oct23-Marius-Laptop.csv
+-Marius-Laptop.Rhistory
